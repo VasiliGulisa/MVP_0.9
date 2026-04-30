@@ -1,0 +1,2683 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d10" id="theme-meta">
+<title>Wallet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  /* === DARK THEME (default) === */
+  :root, [data-theme="dark"] {
+    --bg: #0d0d10;
+    --surface: #15151a;
+    --surface-2: #1c1c22;
+    --surface-3: #25252d;
+    --border: #25252d;
+    --border-strong: #353541;
+    --divider: #1c1c22;
+
+    --text: #f4f3ee;
+    --text-2: #a8a89a;
+    --text-3: #6b6b65;
+    --text-4: #3d3d40;
+
+    --accent: #FF6A4C;
+    --accent-2: #FF9B82;
+    --accent-soft: rgba(255, 106, 76, 0.12);
+    --accent-soft-strong: rgba(255, 106, 76, 0.22);
+
+    --positive: #6BC495;
+    --negative: #E15554;
+
+    --card-grad-1: linear-gradient(155deg, #2a1a18 0%, #1c1c22 60%);
+    --card-grad-2: linear-gradient(155deg, #1a2622 0%, #1c1c22 60%);
+    --card-grad-3: linear-gradient(155deg, #2a2418 0%, #1c1c22 60%);
+    --card-grad-4: linear-gradient(155deg, #1a1c2e 0%, #1c1c22 60%);
+
+    --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.3);
+    --hairline: 0 0 0 0.5px rgba(255,255,255,0.06);
+  }
+  /* === LIGHT THEME === */
+  [data-theme="light"] {
+    --bg: #f5f1ea;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --surface-3: #ede8e0;
+    --border: #e7e2d7;
+    --border-strong: #d6d0c2;
+    --divider: #f0ebe1;
+
+    --text: #1a1815;
+    --text-2: #5a574e;
+    --text-3: #8a8678;
+    --text-4: #c2bdb0;
+
+    --accent: #E5503A;
+    --accent-2: #FF7050;
+    --accent-soft: rgba(229, 80, 58, 0.08);
+    --accent-soft-strong: rgba(229, 80, 58, 0.18);
+
+    --positive: #3a8a5e;
+    --negative: #c44848;
+
+    --card-grad-1: linear-gradient(155deg, #fce4d8 0%, #f5f1ea 70%);
+    --card-grad-2: linear-gradient(155deg, #d8eedf 0%, #f5f1ea 70%);
+    --card-grad-3: linear-gradient(155deg, #f5e8c9 0%, #f5f1ea 70%);
+    --card-grad-4: linear-gradient(155deg, #dde0f0 0%, #f5f1ea 70%);
+
+    --shadow: 0 1px 2px rgba(0,0,0,0.03), 0 8px 24px rgba(120,100,80,0.06);
+    --hairline: 0 0 0 0.5px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    height: 100dvh;
+    overscroll-behavior: none;
+  }
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-variant-numeric: tabular-nums;
+  }
+  #root {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    display: flex;
+  }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+    font-feature-settings: inherit;
+  }
+  input { font-family: inherit; outline: none; }
+
+  .phone {
+    width: 100%;
+    height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    -webkit-overflow-scrolling: touch;
+    animation: pageIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes pageIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .screen::-webkit-scrollbar { width: 0; height: 0; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: calc(16px + env(safe-area-inset-top)) 22px 16px;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .icon-btn:active { background: var(--surface-3); }
+  .icon-btn-ghost {
+    background: transparent;
+  }
+
+  .back-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  /* ==== Welcome ==== */
+  .welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: calc(env(safe-area-inset-top) + 24px) 28px calc(env(safe-area-inset-bottom) + 32px);
+    position: relative;
+    overflow: hidden;
+  }
+  .welcome-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .welcome-bg::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    right: -30%;
+    width: 80%;
+    height: 70%;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 60%);
+    filter: blur(40px);
+  }
+  .welcome-bg::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    left: -30%;
+    width: 70%;
+    height: 50%;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 60%);
+    filter: blur(50px);
+    opacity: 0.5;
+  }
+  .welcome-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    width: 32px; height: 32px;
+    background: var(--text);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    padding-top: 2px;
+  }
+  .display-h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+  }
+  .display-h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .display-sub {
+    font-size: 16px;
+    color: var(--text-2);
+    line-height: 1.45;
+    max-width: 320px;
+    letter-spacing: -0.01em;
+  }
+  .feat-list {
+    display: flex; flex-direction: column;
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .feat-row {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  .feat-num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0;
+    width: 24px;
+    flex-shrink: 0;
+  }
+  .feat-line {
+    flex: 1;
+    height: 0.5px;
+    background: var(--border);
+    margin-right: 12px;
+  }
+  .welcome-actions {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 40px;
+  }
+
+  /* ==== Buttons ==== */
+  .btn-primary {
+    background: var(--text);
+    color: var(--bg);
+    font-weight: 500;
+    font-size: 15px;
+    padding: 18px 24px;
+    border-radius: 999px;
+    width: 100%;
+    letter-spacing: -0.01em;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.985); }
+  .btn-primary:disabled { opacity: 0.4; }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+    font-size: 15px;
+    padding: 18px 24px;
+    border-radius: 999px;
+    width: 100%;
+    letter-spacing: -0.01em;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn-accent:active { transform: scale(0.985); }
+  .btn-accent:disabled { opacity: 0.4; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 0.5px solid var(--border-strong);
+    font-weight: 500;
+    font-size: 14px;
+    padding: 16px 22px;
+    border-radius: 999px;
+    width: 100%;
+  }
+  .btn-link {
+    color: var(--text-2);
+    font-size: 14px;
+    padding: 12px;
+    text-align: center;
+    width: 100%;
+    font-weight: 400;
+  }
+
+  /* ==== Home ==== */
+  .home-greeting {
+    display: flex; flex-direction: column;
+    gap: 2px;
+  }
+  .home-greeting-l1 {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--text-2);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .home-greeting-l2 {
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: -0.005em;
+  }
+
+  .balance-block {
+    padding: 12px 22px 8px;
+  }
+  .balance-label {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 6px;
+    letter-spacing: -0.005em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .balance-amount {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    color: var(--text);
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .balance-cents {
+    font-size: 28px;
+    color: var(--text-3);
+    letter-spacing: -0.02em;
+  }
+  .balance-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+  .balance-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px 4px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: -0.005em;
+  }
+
+  /* ==== Cards swipe ==== */
+  .accs-section {
+    padding: 8px 0 4px;
+  }
+  .accs-track {
+    display: flex;
+    gap: 10px;
+    padding: 0 22px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .accs-track::-webkit-scrollbar { display: none; }
+
+  .acc-card {
+    width: calc(100vw - 88px);
+    max-width: 392px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    border-radius: 24px;
+    padding: 22px 22px 20px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .acc-card[data-grad="1"] { background: var(--card-grad-1); }
+  .acc-card[data-grad="2"] { background: var(--card-grad-2); }
+  .acc-card[data-grad="3"] { background: var(--card-grad-3); }
+  .acc-card[data-grad="4"] { background: var(--card-grad-4); }
+
+  .acc-head {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .acc-tag {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+  .acc-flag {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1;
+    background: var(--surface-3);
+    color: var(--text);
+  }
+  .acc-bal {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: 38px;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .acc-bal-cents {
+    font-size: 18px;
+    color: var(--text-3);
+  }
+  .acc-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: auto;
+  }
+  .add-acc {
+    width: 80px;
+    flex-shrink: 0;
+    border-radius: 24px;
+    border: 0.5px dashed var(--border-strong);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-3);
+    font-size: 11px;
+    gap: 6px;
+    background: transparent;
+  }
+
+  /* ==== Quick actions ==== */
+  .quick-actions {
+    padding: 18px 22px 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .qa {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px;
+    padding: 14px 4px 12px;
+    border-radius: 16px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    transition: background 0.15s;
+  }
+  .qa:active { background: var(--surface-3); }
+  .qa-icon {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+  .qa-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: -0.005em;
+  }
+
+  /* ==== Section ==== */
+  .section-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 18px 22px 10px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: -0.005em;
+  }
+  .section-link {
+    font-size: 12px;
+    color: var(--text-3);
+    transition: color 0.15s;
+  }
+  .section-link:active { color: var(--text); }
+
+  /* ==== Tx list ==== */
+  .tx-list {
+    padding: 0 12px 80px;
+  }
+  .tx-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .tx-item:active { background: var(--surface); }
+
+  .tx-icon {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--text);
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tx-date {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 1px;
+    letter-spacing: -0.005em;
+  }
+  .tx-amount {
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .tx-amount.in { color: var(--positive); }
+  .tx-amount.out { color: var(--text); }
+
+  /* ==== Spark ==== */
+  .spark-card {
+    margin: 14px 22px 4px;
+    padding: 18px 18px 12px;
+    background: var(--surface);
+    border-radius: 18px;
+    border: 0.5px solid var(--border);
+  }
+  .spark-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .spark-label {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .spark-val {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-top: 4px;
+  }
+  .spark-delta {
+    font-size: 11px;
+    color: var(--positive);
+    margin-top: 4px;
+    letter-spacing: -0.005em;
+  }
+  .spark-period-tabs {
+    display: flex;
+    gap: 14px;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 0.5px solid var(--border);
+  }
+  .spark-period-tab.active {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ==== Bottom nav ==== */
+  .bottomnav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 0.5px solid var(--border);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--bg);
+    flex-shrink: 0;
+    backdrop-filter: blur(20px);
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px;
+    padding: 8px;
+    border-radius: 14px;
+    transition: background 0.15s;
+  }
+  .nav-label {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: -0.005em;
+  }
+  .nav-item.active .nav-label {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ==== Form ==== */
+  .form-stack { padding: 0 22px; display: flex; flex-direction: column; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label {
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-left: 14px;
+  }
+  .form-input {
+    width: 100%;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+    color: var(--text);
+    font-size: 15px;
+    letter-spacing: -0.005em;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .form-input:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+  .form-input::placeholder { color: var(--text-3); }
+
+  /* ==== Bottom actions ==== */
+  .bottom-actions {
+    padding: 14px 22px calc(20px + env(safe-area-inset-bottom));
+    background: linear-gradient(to bottom, transparent, var(--bg) 30%);
+    flex-shrink: 0;
+  }
+
+  /* ==== Big amount input ==== */
+  .amount-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 22px;
+  }
+  .amount-from {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 14px;
+    letter-spacing: -0.005em;
+  }
+  .amount-input-row {
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .amount-input {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: 88px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    text-align: center;
+    width: auto;
+    min-width: 100px;
+    max-width: 100%;
+    padding: 0;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .amount-currency {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 36px;
+    color: var(--text-2);
+    letter-spacing: -0.02em;
+  }
+  .amount-available {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 18px;
+  }
+  .amount-quick {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 22px 22px 0;
+  }
+  .quick-btn {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  /* ==== Method picker ==== */
+  .method-list { padding: 0 22px; display: flex; flex-direction: column; gap: 6px; }
+  .method {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .method.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .method-icon {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--surface-3);
+    color: var(--text);
+  }
+  .method.selected .method-icon {
+    background: var(--accent);
+    color: #fff;
+  }
+  .method-info { flex: 1; min-width: 0; }
+  .method-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .method-meta {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+  .method-radio {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-4);
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .method.selected .method-radio {
+    border-color: var(--accent);
+  }
+  .method.selected .method-radio::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* ==== Detail rows ==== */
+  .detail-hero {
+    text-align: center;
+    padding: 28px 22px 24px;
+  }
+  .detail-amount {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: 56px;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    margin: 14px 0 6px;
+  }
+  .detail-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    color: var(--positive);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 8px;
+    border: 0.5px solid var(--border);
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--positive);
+  }
+  .detail-card {
+    margin: 8px 22px 16px;
+    background: var(--surface);
+    border-radius: 18px;
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .detail-row {
+    display: flex; justify-content: space-between;
+    padding: 14px 18px;
+    font-size: 14px;
+  }
+  .detail-row + .detail-row { border-top: 0.5px solid var(--border); }
+  .detail-row-label { color: var(--text-3); letter-spacing: -0.005em; }
+  .detail-row-val { color: var(--text); font-weight: 500; letter-spacing: -0.005em; }
+
+  /* ==== KYC ==== */
+  .kyc-stepper {
+    display: flex;
+    gap: 6px;
+    padding: 4px 22px 28px;
+  }
+  .kyc-step {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border-strong);
+    transition: background 0.3s;
+  }
+  .kyc-step.active { background: var(--accent); }
+  .kyc-step.done { background: var(--text); }
+
+  .upload-box {
+    margin: 0 22px 16px;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 22px;
+    padding: 44px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .upload-box:active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .upload-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+  }
+
+  /* ==== PIN keypad ==== */
+  .pin-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(env(safe-area-inset-top) + 50px) 30px calc(env(safe-area-inset-bottom) + 30px);
+  }
+  .pin-dots {
+    display: flex;
+    gap: 18px;
+    margin: 24px 0;
+  }
+  .pin-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    transition: all 0.15s;
+  }
+  .pin-dot.filled {
+    background: var(--accent);
+    transform: scale(1.1);
+  }
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px 24px;
+    width: 100%;
+    max-width: 300px;
+  }
+  .key {
+    aspect-ratio: 1.6;
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    transition: background 0.1s;
+    border-radius: 14px;
+  }
+  .key:active { background: var(--surface); }
+  .key-bio { color: var(--accent); font-size: 24px; }
+
+  /* ==== Success ==== */
+  .success-screen {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 30px;
+    text-align: center;
+  }
+  .success-icon {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 28px;
+    color: #fff;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .success-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 12px;
+    letter-spacing: -0.025em;
+  }
+  .success-sub {
+    color: var(--text-2);
+    font-size: 15px;
+    line-height: 1.45;
+    max-width: 300px;
+    letter-spacing: -0.005em;
+  }
+
+  /* ==== QR ==== */
+  .qr-stage {
+    flex: 1;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-frame {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px; height: 260px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.65);
+    border-radius: 28px;
+  }
+  .qr-corner {
+    position: absolute;
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--accent);
+  }
+  .qr-corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 14px 0 0 0; }
+  .qr-corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-radius: 0 14px 0 0; }
+  .qr-corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 14px; }
+  .qr-corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 14px 0; }
+  .qr-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 28px 22px calc(22px + env(safe-area-inset-bottom));
+  }
+  .qr-hint {
+    color: rgba(255,255,255,0.85);
+    text-align: center;
+    margin-bottom: 18px;
+    font-size: 14px;
+  }
+  .qr-topbar {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ==== List rows ==== */
+  .list-section { padding: 0 14px 8px; }
+  .list-section-label {
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 22px 22px 8px;
+  }
+  .list-card {
+    background: var(--surface);
+    border-radius: 18px;
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .list-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .list-row + .list-row { border-top: 0.5px solid var(--border); }
+  .list-row:active { background: var(--surface-3); }
+  .list-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .list-content { flex: 1; min-width: 0; }
+  .list-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .list-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  /* ==== Toggle ==== */
+  .toggle {
+    width: 46px; height: 28px;
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle.off { background: var(--surface-3); }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.on .toggle-thumb { left: 21px; }
+  .toggle.off .toggle-thumb { left: 3px; }
+
+  /* ==== Card view ==== */
+  .credit-card {
+    margin: 16px 22px 28px;
+    aspect-ratio: 1.586;
+    border-radius: 24px;
+    padding: 22px;
+    background: linear-gradient(140deg, #1a1a20 0%, #0d0d10 50%, #2a1a18 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    color: #fff;
+  }
+  [data-theme="light"] .credit-card {
+    background: linear-gradient(140deg, #1a1a20 0%, #2d1815 100%);
+  }
+  .credit-card::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 80%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,106,76,0.18) 0%, transparent 70%);
+  }
+  .card-brand {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: -0.01em;
+    z-index: 1;
+  }
+  .card-number {
+    font-family: 'Geist Mono', monospace;
+    font-size: 17px;
+    color: rgba(255,255,255,0.92);
+    letter-spacing: 0.05em;
+    margin-top: auto;
+    z-index: 1;
+  }
+  .card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 12px;
+    z-index: 1;
+  }
+  .card-name {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ==== Marketplace ==== */
+  .mkt-hero {
+    margin: 8px 22px 18px;
+    padding: 24px;
+    border-radius: 22px;
+    background: linear-gradient(140deg, var(--accent) 0%, #c9402b 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .mkt-hero::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -20%;
+    width: 60%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  }
+  .mkt-hero-tag {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    font-weight: 500;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .mkt-hero-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 26px;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .mkt-hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    color: var(--accent);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    position: relative;
+  }
+  .mkt-cat {
+    padding: 18px 22px 10px;
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .mkt-grid {
+    padding: 0 14px 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mkt-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    border: 0.5px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.15s;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .mkt-card:active { transform: scale(0.98); }
+  .mkt-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mkt-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-top: 12px;
+    letter-spacing: -0.005em;
+  }
+  .mkt-desc {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ==== Notification ==== */
+  .notif-item {
+    display: flex; gap: 14px;
+    padding: 16px 22px;
+    align-items: flex-start;
+  }
+  .notif-item + .notif-item {
+    border-top: 0.5px solid var(--border);
+  }
+  .notif-icon-wrap {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--text);
+  }
+  .notif-content { flex: 1; }
+  .notif-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .notif-text {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .notif-time {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 6px;
+  }
+  .notif-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ==== Customize ==== */
+  .cust-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+  }
+  .cust-row + .cust-row { border-top: 0.5px solid var(--border); }
+  .drag-grip {
+    display: flex; flex-direction: column; gap: 3px;
+    flex-shrink: 0;
+    cursor: grab;
+    padding: 4px;
+  }
+  .drag-line {
+    width: 14px; height: 1.5px;
+    border-radius: 1px;
+    background: var(--text-4);
+  }
+
+  /* ==== Theme switch ==== */
+  .theme-switch {
+    position: relative;
+    width: 60px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .theme-thumb {
+    position: absolute;
+    top: 3px;
+    width: 25px; height: 25px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  [data-theme="dark"] .theme-thumb { left: 3px; }
+  [data-theme="light"] .theme-thumb { left: 31px; }
+
+  /* ==== Convert ==== */
+  .convert-stack {
+    padding: 8px 22px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .convert-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 22px;
+    padding: 22px;
+  }
+  .convert-card + .convert-card { margin-top: 8px; }
+  .convert-label {
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .convert-row {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .convert-amount {
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    width: 100%;
+    letter-spacing: -0.025em;
+    line-height: 1;
+  }
+  .convert-cur-pill {
+    background: var(--surface-3);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .convert-rate {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 6px;
+  }
+  .convert-swap-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 0.5px solid var(--border-strong);
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1;
+  }
+
+  /* ==== History tabs ==== */
+  .filter-tabs {
+    padding: 0 22px 12px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    color: var(--text-2);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: -0.005em;
+  }
+  .filter-tab.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .day-label {
+    padding: 16px 22px 8px;
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ============= ICONS (one consistent style) =============
+const Ico = {
+  arrow: ({ size = 16, dir = 'right' }) => {
+    const rot = { up: -90, right: 0, down: 90, left: 180 }[dir];
+    return <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: `rotate(${rot}deg)` }}><path d="M5 3l5 5-5 5"/></svg>;
+  },
+  back: () => <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4l-6 6 6 6M5 10h12"/></svg>,
+  close: () => <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M5 5l10 10M15 5l-10 10"/></svg>,
+  bell: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 2v.5M9 2a4.5 4.5 0 014.5 4.5c0 2.5.5 3.5 1 4.5H3.5c.5-1 1-2 1-4.5A4.5 4.5 0 019 2z"/><path d="M7.5 14.5a1.5 1.5 0 003 0"/></svg>,
+  download: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3v9M5 9l4 4 4-4M3 15h12"/></svg>,
+  qr: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="5" height="5" rx="0.5"/><rect x="10.5" y="2.5" width="5" height="5" rx="0.5"/><rect x="2.5" y="10.5" width="5" height="5" rx="0.5"/><path d="M10.5 10.5h2v2h-2zM14.5 10.5h1v1h-1zM10.5 14.5h1v1h-1zM12.5 12.5h1v1h-1zM14.5 14.5h1v1h-1z" fill="currentColor"/></svg>,
+  card: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M2 8h14"/></svg>,
+  swap: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h11M11 3l3 3-3 3M15 12H4M7 9l-3 3 3 3"/></svg>,
+  home: ({ filled }) => <svg width="20" height="20" viewBox="0 0 20 20" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"><path d="M3 8.5l7-5.5 7 5.5V16a1 1 0 01-1 1h-3v-5h-6v5H4a1 1 0 01-1-1V8.5z"/></svg>,
+  list: () => <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M3 5h14M3 10h14M3 15h10"/></svg>,
+  shop: () => <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h14l-1 11H4L3 6zM7 6V4a3 3 0 016 0v2"/></svg>,
+  user: () => <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="7" r="3.5"/><path d="M3 17a7 7 0 0114 0"/></svg>,
+  plus: () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M7 2v10M2 7h10"/></svg>,
+  check: ({ size = 18 }) => <svg width={size} height={size} viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,9 8,13 14,5"/></svg>,
+  upload: () => <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 14V4M7 7l4-4 4 4M3 18h16"/></svg>,
+  selfie: () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="20" cy="14" r="6"/><path d="M8 32a12 12 0 0124 0"/></svg>,
+  search: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M12 12l3.5 3.5"/></svg>,
+  filter: () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h12M4 8h8M6 12h4"/></svg>,
+  shield: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 1.5L3 4v5c0 3.5 2.5 6.5 6 7.5 3.5-1 6-4 6-7.5V4L9 1.5z"/></svg>,
+  bank: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M9 2L1.5 6h15L9 2zM3 7v8M6 7v8M12 7v8M15 7v8M1.5 16h15"/></svg>,
+  crypto: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="6.5"/><path d="M9 4.5v9M6 7h4.5a1.5 1.5 0 010 3H6M6 10.5h5a1.5 1.5 0 010 3H6"/></svg>,
+  wallet: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><circle cx="12.5" cy="9" r="1.2" fill="currentColor"/></svg>,
+  globe: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="9" r="6.5"/><path d="M2.5 9h13M9 2.5c2 2 3 4 3 6.5s-1 4.5-3 6.5M9 2.5c-2 2-3 4-3 6.5s1 4.5 3 6.5"/></svg>,
+  esim: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2.5" width="10" height="13" rx="2"/><path d="M7 6h4M7 9h4M7 12h2"/></svg>,
+  vpn: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 2L3 4v5c0 3.5 2.5 6.5 6 7.5 3.5-1 6-4 6-7.5V4L9 2z"/><path d="M6.5 9.5L8.5 11.5 12 7.5"/></svg>,
+  phone: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="8" height="14" rx="1.5"/><path d="M8 13.5h2"/></svg>,
+  gift: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="6.5" width="13" height="9" rx="1"/><path d="M2.5 10h13M9 6.5v9"/><path d="M6.5 6.5C5.5 6.5 4.5 5.5 4.5 4.5S5.5 2.5 6.5 2.5 9 4 9 6.5h-2.5zM11.5 6.5C12.5 6.5 13.5 5.5 13.5 4.5S12.5 2.5 11.5 2.5 9 4 9 6.5h2.5z"/></svg>,
+  insurance: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 2L3.5 4v4c0 4 2.5 7 5.5 8 3-1 5.5-4 5.5-8V4L9 2z"/><path d="M6.5 8.5l2 2 3-3.5"/></svg>,
+  sun: () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="7" cy="7" r="2.5"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.5 2.5l1 1M10.5 10.5l1 1M2.5 11.5l1-1M10.5 3.5l1-1"/></svg>,
+  moon: () => <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M9.5 2A5.5 5.5 0 1012 11a4.5 4.5 0 01-2.5-9z"/></svg>,
+  copy: () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M2 9V3a1 1 0 011-1h6"/></svg>,
+  settings: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M9 2v2M9 14v2M2 9h2M14 9h2M3.6 3.6l1.4 1.4M13 13l1.4 1.4M3.6 14.4L5 13M13 5l1.4-1.4"/><circle cx="9" cy="9" r="2.5"/></svg>,
+  lock: () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3.5" y="8" width="11" height="7" rx="1.5"/><path d="M5.5 8V5.5a3.5 3.5 0 017 0V8"/></svg>,
+};
+
+// ============= DATA =============
+const ACCOUNTS = [
+  { id: 'usd', tag: 'USD', flag: '$', balance: '4 820', cents: '50', equiv: 'Основной', pending: '+$340 ожидается', grad: 1 },
+  { id: 'eur', tag: 'EUR', flag: '€', balance: '2 150', cents: '00', equiv: '≈ $2 330', pending: '+€80 ожидается', grad: 2 },
+  { id: 'usdt', tag: 'USDT', flag: '₮', balance: '1 200', cents: '00', equiv: '≈ $1 200', pending: 'Tether ERC-20', grad: 3 },
+  { id: 'cop', tag: 'COP', flag: '$', balance: '1.24M', cents: '', equiv: '≈ $290', pending: 'Колумбия', grad: 4 },
+];
+
+const TRANSACTIONS = [
+  { id: 't1', name: 'OnlyFans', date: 'Сегодня · 14:32', amount: '+$820.00', type: 'in', acc: 'USD', initial: 'O' },
+  { id: 't2', name: 'Zara online', date: 'Вчера · 19:15', amount: '−$64.90', type: 'out', acc: 'Карта', initial: 'Z' },
+  { id: 't3', name: 'Fansly', date: 'Вчера · 09:00', amount: '+$390.00', type: 'in', acc: 'USD', initial: 'F' },
+  { id: 't4', name: 'Обмен USD → USDT', date: '28 апр · 15:00', amount: '500 USDT', type: 'swap', acc: 'USDT', initial: '⇄' },
+  { id: 't5', name: 'Wise', date: '28 апр · 11:20', amount: '−$500.00', type: 'out', acc: 'USD', initial: 'W' },
+  { id: 't6', name: 'Patreon', date: '27 апр · 18:45', amount: '+$120.00', type: 'in', acc: 'USD', initial: 'P' },
+];
+
+const PAYOUT_METHODS = [
+  { id: 'bank', name: 'Банковский перевод', meta: 'SEPA · 1–3 дня · 2.5%', icon: 'bank' },
+  { id: 'crypto', name: 'Криптовалюта', meta: 'USDT · мгновенно · $3', icon: 'crypto' },
+  { id: 'wise', name: 'Wise', meta: 'E-wallet · ~1 час · 1.5%', icon: 'wallet' },
+  { id: 'paxum', name: 'Paxum', meta: 'E-wallet · 1–2 часа · $5', icon: 'wallet' },
+  { id: 'pix', name: 'PIX', meta: 'Бразилия · мгновенно · 1%', icon: 'globe' },
+  { id: 'pse', name: 'PSE', meta: 'Колумбия · 30 мин · 1%', icon: 'globe' },
+];
+
+const NOTIFICATIONS = [
+  { id: 'n1', title: 'Зачисление от OnlyFans', text: '$820.00 на USD счёт', time: '14:32', initial: '+', unread: true },
+  { id: 'n2', title: 'Покупка по карте', text: 'Zara online · −$64.90', time: 'Вчера', initial: '–', unread: false },
+  { id: 'n3', title: 'Вывод обработан', text: 'Wise · $500 успешно', time: '28 апр', initial: '✓', unread: false },
+  { id: 'n4', title: 'Зачисление от Fansly', text: '$390.00 на USD счёт', time: '28 апр', initial: '+', unread: false },
+];
+
+const MARKET = [
+  { id: 'esim', name: 'eSIM', desc: 'Связь по миру', icon: 'esim', cat: 'Связь' },
+  { id: 'vpn', name: 'VPN', desc: 'Доступ к платформам', icon: 'vpn', cat: 'Связь' },
+  { id: 'number', name: 'Номер', desc: 'Виртуальный', icon: 'phone', cat: 'Связь' },
+  { id: 'gift', name: 'Гифт-карты', desc: 'Amazon, Steam', icon: 'gift', cat: 'Покупки' },
+  { id: 'insurance', name: 'Страховка', desc: 'Travel insurance', icon: 'insurance', cat: 'Путешествия' },
+];
+
+// ============= COMPONENTS =============
+
+const TopBar = ({ title, onBack, action, leftBtn }) => (
+  <div className="topbar">
+    {leftBtn || (onBack ? (
+      <button className="back-btn" onClick={onBack}><Ico.back /></button>
+    ) : <div style={{ width: 40 }} />)}
+    {title && <div className="topbar-title">{title}</div>}
+    {action || <div style={{ width: 40 }} />}
+  </div>
+);
+
+const BottomNav = ({ active, nav }) => {
+  const items = [
+    { id: 'home', label: 'Главная', icon: 'home' },
+    { id: 'history', label: 'История', icon: 'list' },
+    { id: 'market', label: 'Сервисы', icon: 'shop' },
+    { id: 'profile', label: 'Профиль', icon: 'user' },
+  ];
+  return (
+    <div className="bottomnav">
+      {items.map(it => {
+        const isActive = active === it.id;
+        const IconComp = Ico[it.icon];
+        return (
+          <button key={it.id} className={`nav-item ${isActive ? 'active' : ''}`} onClick={() => nav(it.id)}>
+            {it.icon === 'home' ? <IconComp filled={isActive} /> : <IconComp />}
+            <span className="nav-label">{it.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const ThemeSwitch = ({ theme, onToggle }) => (
+  <button className="theme-switch" onClick={onToggle}>
+    <div className="theme-thumb">
+      {theme === 'dark' ? <Ico.moon /> : <Ico.sun />}
+    </div>
+  </button>
+);
+
+// ============= SCREENS =============
+
+const WelcomeScreen = ({ nav, theme, onThemeToggle }) => (
+  <div className="welcome">
+    <div className="welcome-bg" />
+    <div className="welcome-content">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 60 }}>
+        <div className="brand">
+          <div className="brand-mark">w</div>
+          <span>wallet</span>
+        </div>
+        <ThemeSwitch theme={theme} onThemeToggle={onThemeToggle} onToggle={onThemeToggle} />
+      </div>
+      <div>
+        <h1 className="display-h1">
+          Деньги от платформ —<br/>
+          <em>в одном месте</em>
+        </h1>
+        <p className="display-sub">
+          Получай выплаты, выводи на любой метод и пользуйся сервисами для путешествий.
+        </p>
+        <div className="feat-list">
+          {[
+            'Все валюты и крипта',
+            'Прозрачные комиссии',
+            'eSIM, VPN, страховка'
+          ].map((f, i) => (
+            <div key={i} className="feat-row">
+              <span className="feat-num">0{i + 1}</span>
+              <div className="feat-line" />
+              <span>{f}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="welcome-actions">
+        <button className="btn-primary" onClick={() => nav('register')}>Открыть кошелёк</button>
+        <button className="btn-link" onClick={() => nav('login')}>У меня уже есть аккаунт</button>
+      </div>
+    </div>
+  </div>
+);
+
+const RegisterScreen = ({ nav }) => {
+  const [form, setForm] = useState({ email: '', phone: '', pwd: '' });
+  return (
+    <div className="screen">
+      <TopBar onBack={() => nav('welcome')} />
+      <div style={{ flex: 1, padding: '8px 0 24px' }}>
+        <h2 className="display-h1" style={{ fontSize: 40, padding: '8px 22px 24px' }}>
+          Создай аккаунт<br/><em>за 30 секунд</em>
+        </h2>
+        <div className="form-stack">
+          <div className="form-group">
+            <span className="form-label">Email</span>
+            <input className="form-input" placeholder="alina@example.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <span className="form-label">Телефон</span>
+            <input className="form-input" placeholder="+57 300 000 0000" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <span className="form-label">Пароль</span>
+            <input className="form-input" type="password" placeholder="Не менее 8 символов" value={form.pwd} onChange={e => setForm({...form, pwd: e.target.value})} />
+          </div>
+        </div>
+        <div style={{ padding: '20px 22px', fontSize: 12, color: 'var(--text-3)', lineHeight: 1.5 }}>
+          Регистрируясь, ты соглашаешься с условиями обслуживания
+        </div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-primary" onClick={() => nav('kyc')}>Продолжить</button>
+      </div>
+    </div>
+  );
+};
+
+const KycScreen = ({ nav }) => {
+  const [step, setStep] = useState(0);
+  return (
+    <div className="screen">
+      <TopBar onBack={() => step > 0 ? setStep(step - 1) : nav('register')} title="Верификация" />
+      <div className="kyc-stepper">
+        {[0, 1, 2].map(i => (
+          <div key={i} className={`kyc-step ${i < step ? 'done' : i === step ? 'active' : ''}`} />
+        ))}
+      </div>
+      <div style={{ flex: 1 }}>
+        {step === 0 && (
+          <>
+            <h2 className="display-h1" style={{ fontSize: 36, padding: '0 22px 12px' }}>
+              Загрузи<br/><em>документ</em>
+            </h2>
+            <p style={{ fontSize: 14, color: 'var(--text-2)', padding: '0 22px 28px', lineHeight: 1.5 }}>
+              Паспорт, ID-карта или права. Сфотографируй лицевую сторону.
+            </p>
+            <div className="upload-box" onClick={() => setStep(1)}>
+              <div className="upload-icon"><Ico.upload /></div>
+              <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 4, color: 'var(--text)' }}>Сделать фото</div>
+              <div style={{ fontSize: 12, color: 'var(--text-3)' }}>JPG, PNG · до 10 МБ</div>
+            </div>
+          </>
+        )}
+        {step === 1 && (
+          <>
+            <h2 className="display-h1" style={{ fontSize: 36, padding: '0 22px 12px' }}>
+              Селфи для<br/><em>сверки</em>
+            </h2>
+            <p style={{ fontSize: 14, color: 'var(--text-2)', padding: '0 22px 28px', lineHeight: 1.5 }}>
+              Расположи лицо в центре. Без очков и головных уборов.
+            </p>
+            <div style={{ margin: '0 22px', borderRadius: 22, background: 'var(--surface)', border: '0.5px solid var(--border)', padding: 50, textAlign: 'center' }}>
+              <div style={{ width: 120, height: 120, margin: '0 auto', borderRadius: '50%', background: 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)' }}>
+                <Ico.selfie />
+              </div>
+              <button className="btn-primary" style={{ marginTop: 28 }} onClick={() => setStep(2)}>Открыть камеру</button>
+            </div>
+          </>
+        )}
+        {step === 2 && (
+          <div className="success-screen">
+            <div className="success-icon"><Ico.check size={36} /></div>
+            <div className="success-title">Документы<br/><em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>приняты</em></div>
+            <div className="success-sub" style={{ marginTop: 8 }}>Проверка занимает пару минут.<br/>Большинство функций уже доступно.</div>
+            <div style={{ marginTop: 36, width: '100%' }}>
+              <button className="btn-primary" onClick={() => nav('openAccount')}>Открыть первый счёт</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const OpenAccountScreen = ({ nav }) => {
+  const [selected, setSelected] = useState('usd');
+  const opts = [
+    { id: 'usd', name: 'USD', desc: 'Самая популярная валюта', icon: '$' },
+    { id: 'eur', name: 'EUR', desc: 'Для европейских платформ', icon: '€' },
+    { id: 'usdt', name: 'USDT', desc: 'Стабильная крипта', icon: '₮' },
+  ];
+  return (
+    <div className="screen">
+      <TopBar onBack={() => nav('kyc')} />
+      <div style={{ flex: 1 }}>
+        <h2 className="display-h1" style={{ fontSize: 40, padding: '8px 22px 12px' }}>
+          В какой валюте<br/><em>будешь получать?</em>
+        </h2>
+        <p style={{ fontSize: 14, color: 'var(--text-2)', padding: '0 22px 28px', lineHeight: 1.5 }}>
+          Можешь добавить другие позже — это бесплатно.
+        </p>
+        <div className="method-list">
+          {opts.map(o => (
+            <div key={o.id} className={`method ${selected === o.id ? 'selected' : ''}`} onClick={() => setSelected(o.id)}>
+              <div className="method-icon" style={{ fontFamily: 'Instrument Serif, serif', fontStyle: 'italic', fontSize: 22, lineHeight: 1 }}>{o.icon}</div>
+              <div className="method-info">
+                <div className="method-name">{o.name}</div>
+                <div className="method-meta">{o.desc}</div>
+              </div>
+              <div className="method-radio" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-primary" onClick={() => nav('home')}>Создать счёт</button>
+      </div>
+    </div>
+  );
+};
+
+const LoginScreen = ({ nav }) => {
+  const [pin, setPin] = useState('');
+  const handleKey = (k) => {
+    if (k === 'del') { setPin(p => p.slice(0, -1)); return; }
+    if (k === 'bio') { nav('home'); return; }
+    if (pin.length < 4) {
+      const newPin = pin + k;
+      setPin(newPin);
+      if (newPin.length === 4) setTimeout(() => nav('home'), 250);
+    }
+  };
+  return (
+    <div className="screen">
+      <TopBar onBack={() => nav('welcome')} />
+      <div className="pin-screen">
+        <div style={{ textAlign: 'center' }}>
+          <div className="brand-mark" style={{ margin: '0 auto 20px', width: 48, height: 48, fontSize: 32 }}>w</div>
+          <h2 className="display-h1" style={{ fontSize: 32, marginBottom: 8 }}>С возвращением</h2>
+          <p style={{ fontSize: 13, color: 'var(--text-3)' }}>Введи PIN-код</p>
+          <div className="pin-dots">
+            {[0,1,2,3].map(i => <div key={i} className={`pin-dot ${pin.length > i ? 'filled' : ''}`} />)}
+          </div>
+        </div>
+        <div className="keypad">
+          {['1','2','3','4','5','6','7','8','9','bio','0','del'].map(k => (
+            <button key={k} className={`key ${k === 'bio' ? 'key-bio' : ''}`} onClick={() => handleKey(k)} style={k === 'del' || k === 'bio' ? { fontSize: 20 } : {}}>
+              {k === 'bio' ? '◉' : k === 'del' ? '←' : k}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AccountCard = ({ acc, onClick }) => (
+  <div className="acc-card" data-grad={acc.grad} onClick={onClick}>
+    <div className="acc-head">
+      <span className="acc-tag">{acc.tag}</span>
+      <div className="acc-flag">{acc.flag}</div>
+    </div>
+    <div className="acc-bal">
+      {acc.balance}
+      {acc.cents && <span className="acc-bal-cents">,{acc.cents}</span>}
+    </div>
+    <div className="acc-foot">
+      <span>{acc.equiv}</span>
+      <span>{acc.pending}</span>
+    </div>
+  </div>
+);
+
+const HomeScreen = ({ nav, setMainTab }) => {
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  return (
+    <div className="screen">
+      <div className="topbar">
+        <div className="home-greeting">
+          <span className="home-greeting-l1">Hello, Alina</span>
+          <span className="home-greeting-l2">Среда, 30 апреля</span>
+        </div>
+        <button className="icon-btn" onClick={() => nav('notifications')}>
+          <Ico.bell />
+        </button>
+      </div>
+
+      <div className="balance-block">
+        <div className="balance-label">Доступно во всех счетах</div>
+        <div className="balance-amount">
+          <span style={{ fontStyle: 'italic', color: 'var(--text-3)', marginRight: 4, fontSize: 40 }}>$</span>
+          8,640
+          <span className="balance-cents">,50</span>
+        </div>
+        <div className="balance-meta">
+          <span className="balance-pill">
+            <Ico.arrow size={10} dir="up" />
+            +$1,210 за месяц
+          </span>
+        </div>
+      </div>
+
+      <div className="accs-section">
+        <div className="accs-track">
+          {ACCOUNTS.map(acc => <AccountCard key={acc.id} acc={acc} />)}
+          <button className="add-acc">
+            <Ico.plus />
+            <span>Добавить</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="quick-actions">
+        <button className="qa" onClick={() => nav('payout')}>
+          <div className="qa-icon"><Ico.download /></div>
+          <span className="qa-label">Вывести</span>
+        </button>
+        <button className="qa" onClick={() => nav('qr')}>
+          <div className="qa-icon"><Ico.qr /></div>
+          <span className="qa-label">QR</span>
+        </button>
+        <button className="qa" onClick={() => nav('convert')}>
+          <div className="qa-icon"><Ico.swap /></div>
+          <span className="qa-label">Обмен</span>
+        </button>
+        <button className="qa" onClick={() => nav('cardManage')}>
+          <div className="qa-icon"><Ico.card /></div>
+          <span className="qa-label">Карта</span>
+        </button>
+      </div>
+
+      <div className="spark-card">
+        <div className="spark-head">
+          <div>
+            <div className="spark-label">Доход за 30 дней</div>
+            <div className="spark-val">$2,340</div>
+            <div className="spark-delta">↑ +12% против прошлого месяца</div>
+          </div>
+        </div>
+        <svg width="100%" height="50" viewBox="0 0 320 50" preserveAspectRatio="none" style={{ marginTop: 4 }}>
+          <defs>
+            <linearGradient id="spark" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.18"/>
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          <polyline points="0,38 45,32 90,34 135,18 180,22 225,12 270,16 320,8" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
+          <polyline points="0,38 45,32 90,34 135,18 180,22 225,12 270,16 320,8 320,50 0,50" fill="url(#spark)" stroke="none"/>
+        </svg>
+        <div className="spark-period-tabs">
+          <span className="spark-period-tab">7д</span>
+          <span className="spark-period-tab active">30д</span>
+          <span className="spark-period-tab">90д</span>
+          <span className="spark-period-tab">Всё</span>
+        </div>
+      </div>
+
+      <div className="section-head">
+        <span className="section-title">Последние операции</span>
+        <button className="section-link" onClick={() => setMainTab('history')}>Все</button>
+      </div>
+
+      <div className="tx-list">
+        {TRANSACTIONS.slice(0, 4).map(tx => (
+          <div key={tx.id} className="tx-item" onClick={() => nav('txDetail', { tx })}>
+            <div className="tx-icon">{tx.initial}</div>
+            <div className="tx-info">
+              <div className="tx-name">{tx.name}</div>
+              <div className="tx-date">{tx.date}</div>
+            </div>
+            <div className={`tx-amount ${tx.type === 'in' ? 'in' : tx.type === 'out' ? 'out' : ''}`}>
+              {tx.amount}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const NotificationsScreen = ({ nav }) => (
+  <div className="screen">
+    <TopBar title="Уведомления" onBack={() => nav('home')} />
+    <div style={{ flex: 1 }}>
+      {NOTIFICATIONS.map(n => (
+        <div key={n.id} className="notif-item">
+          <div className="notif-icon-wrap" style={{ fontFamily: 'Instrument Serif, serif', fontSize: 18 }}>{n.initial}</div>
+          <div className="notif-content">
+            <div className="notif-title">{n.title}</div>
+            <div className="notif-text">{n.text}</div>
+            <div className="notif-time">{n.time}</div>
+          </div>
+          {n.unread && <div className="notif-dot" />}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const TxDetailScreen = ({ nav, params }) => {
+  const tx = params?.tx || TRANSACTIONS[0];
+  return (
+    <div className="screen">
+      <TopBar onBack={() => nav('home')} />
+      <div className="detail-hero">
+        <div style={{ width: 56, height: 56, margin: '0 auto', borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Instrument Serif, serif', fontStyle: 'italic', fontSize: 26 }}>
+          {tx.initial}
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 14 }}>{tx.name}</div>
+        <div className="detail-amount" style={{ color: tx.type === 'in' ? 'var(--positive)' : 'var(--text)' }}>
+          {tx.amount}
+        </div>
+        <div className="detail-status">
+          <span className="status-dot" />
+          <span>Успешно</span>
+        </div>
+      </div>
+      <div className="detail-card">
+        <div className="detail-row"><span className="detail-row-label">Дата</span><span className="detail-row-val">{tx.date}</span></div>
+        <div className="detail-row"><span className="detail-row-label">Тип</span><span className="detail-row-val">{tx.type === 'in' ? 'Зачисление' : tx.type === 'out' ? 'Списание' : 'Обмен'}</span></div>
+        <div className="detail-row"><span className="detail-row-label">Счёт</span><span className="detail-row-val">{tx.acc}</span></div>
+        <div className="detail-row"><span className="detail-row-label">Комиссия</span><span className="detail-row-val">$0.00</span></div>
+        <div className="detail-row"><span className="detail-row-label">ID</span><span className="detail-row-val" style={{ fontFamily: 'Geist Mono, monospace', fontSize: 12 }}>tx_{tx.id}_8e2a91</span></div>
+      </div>
+      <div className="bottom-actions" style={{ display: 'flex', gap: 8 }}>
+        <button className="btn-ghost">Поделиться</button>
+        <button className="btn-ghost">Повторить</button>
+      </div>
+    </div>
+  );
+};
+
+const PayoutScreen = ({ nav }) => {
+  const [step, setStep] = useState(0);
+  const [method, setMethod] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [reqs, setReqs] = useState({ wallet: '', name: '' });
+  const titles = ['Куда вывести', 'Сколько', 'Реквизиты', 'Проверь'];
+
+  if (step === 0) return (
+    <div className="screen">
+      <TopBar title={titles[0]} onBack={() => nav('home')} />
+      <div style={{ flex: 1, padding: '8px 0 16px' }}>
+        <div className="method-list">
+          {PAYOUT_METHODS.map(m => {
+            const IconComp = Ico[m.icon];
+            return (
+              <div key={m.id} className={`method ${method === m.id ? 'selected' : ''}`} onClick={() => setMethod(m.id)}>
+                <div className="method-icon"><IconComp /></div>
+                <div className="method-info">
+                  <div className="method-name">{m.name}</div>
+                  <div className="method-meta">{m.meta}</div>
+                </div>
+                <div className="method-radio" />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-primary" disabled={!method} onClick={() => setStep(1)}>Далее</button>
+      </div>
+    </div>
+  );
+
+  if (step === 1) return (
+    <div className="screen">
+      <TopBar title={titles[1]} onBack={() => setStep(0)} />
+      <div className="amount-stage">
+        <div className="amount-from">USD счёт · доступно $4 820.50</div>
+        <div className="amount-input-row">
+          <span className="amount-currency">$</span>
+          <input
+            className="amount-input"
+            value={amount}
+            onChange={e => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
+            placeholder="0"
+            inputMode="decimal"
+            style={{ width: `${Math.max(2, (amount || '0').length)}ch` }}
+          />
+        </div>
+        <div className="amount-quick">
+          <button className="quick-btn" onClick={() => setAmount('100')}>$100</button>
+          <button className="quick-btn" onClick={() => setAmount('500')}>$500</button>
+          <button className="quick-btn" onClick={() => setAmount('1000')}>$1,000</button>
+          <button className="quick-btn" onClick={() => setAmount('4820')}>Всё</button>
+        </div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-primary" disabled={!amount} onClick={() => setStep(2)}>Далее</button>
+      </div>
+    </div>
+  );
+
+  if (step === 2) return (
+    <div className="screen">
+      <TopBar title={titles[2]} onBack={() => setStep(1)} />
+      <div style={{ flex: 1, padding: '8px 0' }}>
+        <div className="form-stack">
+          <div className="form-group">
+            <span className="form-label">Адрес кошелька</span>
+            <input className="form-input" placeholder="0x…" value={reqs.wallet} onChange={e => setReqs({...reqs, wallet: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <span className="form-label">Имя получателя</span>
+            <input className="form-input" placeholder="Полное имя" value={reqs.name} onChange={e => setReqs({...reqs, name: e.target.value})} />
+          </div>
+        </div>
+        <div style={{ margin: '20px 22px', padding: 16, background: 'var(--surface)', borderRadius: 14, border: '0.5px solid var(--border)', fontSize: 13, color: 'var(--text-2)', display: 'flex', gap: 10, alignItems: 'flex-start', lineHeight: 1.5 }}>
+          <Ico.shield />
+          <span>Проверь адрес внимательно. Криптотранзакции необратимы.</span>
+        </div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-primary" onClick={() => setStep(3)}>Далее</button>
+      </div>
+    </div>
+  );
+
+  if (step === 3) return (
+    <div className="screen">
+      <TopBar title={titles[3]} onBack={() => setStep(2)} />
+      <div className="detail-hero">
+        <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Ты выводишь</div>
+        <div className="detail-amount" style={{ fontSize: 64 }}>${amount}</div>
+        <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>через {PAYOUT_METHODS.find(m => m.id === method)?.name}</div>
+      </div>
+      <div className="detail-card">
+        <div className="detail-row"><span className="detail-row-label">Сумма</span><span className="detail-row-val">${amount}</span></div>
+        <div className="detail-row"><span className="detail-row-label">Комиссия</span><span className="detail-row-val">$3.00</span></div>
+        <div className="detail-row"><span className="detail-row-label">К получению</span><span className="detail-row-val" style={{ color: 'var(--accent)' }}>${(parseFloat(amount) - 3).toFixed(2)}</span></div>
+        <div className="detail-row"><span className="detail-row-label">Время</span><span className="detail-row-val">~10 минут</span></div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-accent" onClick={() => nav('payoutSuccess', { amount, method })}>Подтвердить · Touch ID</button>
+      </div>
+    </div>
+  );
+};
+
+const PayoutSuccessScreen = ({ nav, params }) => (
+  <div className="screen">
+    <TopBar leftBtn={<button className="back-btn" onClick={() => nav('home')}><Ico.close /></button>} />
+    <div className="success-screen">
+      <div className="success-icon"><Ico.check size={36} /></div>
+      <div className="success-title">Вывод<br/><em style={{ color: 'var(--accent)' }}>отправлен</em></div>
+      <div className="success-sub" style={{ marginTop: 12 }}>${params?.amount || '500'} в обработке.<br/>Деньги придут в течение 10 минут.</div>
+      <div style={{ marginTop: 36, width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <button className="btn-primary" onClick={() => nav('home')}>На главный экран</button>
+        <button className="btn-link" onClick={() => nav('history')}>Посмотреть в истории</button>
+      </div>
+    </div>
+  </div>
+);
+
+const QrScreen = ({ nav }) => (
+  <div className="screen" style={{ background: '#000' }}>
+    <div className="qr-topbar">
+      <TopBar leftBtn={<button className="back-btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }} onClick={() => nav('home')}><Ico.close /></button>} />
+    </div>
+    <div className="qr-stage">
+      <div className="qr-frame">
+        <div className="qr-corner tl" />
+        <div className="qr-corner tr" />
+        <div className="qr-corner bl" />
+        <div className="qr-corner br" />
+      </div>
+      <div className="qr-bottom">
+        <div className="qr-hint">Наведи камеру на QR-код</div>
+        <button className="btn-accent" onClick={() => nav('qrConfirm')}>Симулировать сканирование</button>
+      </div>
+    </div>
+  </div>
+);
+
+const QrConfirmScreen = ({ nav }) => (
+  <div className="screen">
+    <TopBar onBack={() => nav('qr')} />
+    <div className="detail-hero">
+      <div style={{ width: 60, height: 60, margin: '0 auto', borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Ico.qr />
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 14 }}>Coffee Shop Bangkok · PromptPay</div>
+      <div className="detail-amount" style={{ fontSize: 64 }}>฿150,00</div>
+    </div>
+    <div className="detail-card">
+      <div className="detail-row"><span className="detail-row-label">Сумма в чеке</span><span className="detail-row-val">฿150 THB</span></div>
+      <div className="detail-row"><span className="detail-row-label">Списание</span><span className="detail-row-val">$4.20</span></div>
+      <div className="detail-row"><span className="detail-row-label">Комиссия</span><span className="detail-row-val">$0.30</span></div>
+      <div className="detail-row"><span className="detail-row-label">Со счёта</span><span className="detail-row-val">USD ($4 820)</span></div>
+      <div className="detail-row"><span className="detail-row-label">Итого</span><span className="detail-row-val" style={{ color: 'var(--accent)' }}>−$4.50</span></div>
+    </div>
+    <div className="bottom-actions">
+      <button className="btn-accent" onClick={() => nav('qrSuccess')}>Оплатить · Touch ID</button>
+    </div>
+  </div>
+);
+
+const QrSuccessScreen = ({ nav }) => (
+  <div className="screen">
+    <TopBar leftBtn={<button className="back-btn" onClick={() => nav('home')}><Ico.close /></button>} />
+    <div className="success-screen">
+      <div className="success-icon"><Ico.check size={36} /></div>
+      <div className="success-title">Оплачено</div>
+      <div className="success-sub" style={{ marginTop: 12 }}>$4.50 списано с USD счёта.<br/>Чек отправлен на email.</div>
+      <div style={{ marginTop: 36, width: '100%' }}>
+        <button className="btn-primary" onClick={() => nav('home')}>Готово</button>
+      </div>
+    </div>
+  </div>
+);
+
+const ConvertScreen = ({ nav }) => {
+  const [from, setFrom] = useState('USD');
+  const [to, setTo] = useState('USDT');
+  const [amount, setAmount] = useState('500');
+
+  return (
+    <div className="screen">
+      <TopBar title="Обмен валют" onBack={() => nav('home')} />
+      <div style={{ flex: 1 }}>
+        <div className="convert-stack">
+          <div className="convert-card">
+            <div className="convert-label">Из</div>
+            <div className="convert-row">
+              <input
+                className="convert-amount"
+                value={amount}
+                onChange={e => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
+                inputMode="decimal"
+              />
+              <span className="convert-cur-pill">{from}</span>
+            </div>
+            <div className="convert-rate">Доступно $4 820.50</div>
+          </div>
+          <button className="convert-swap-btn" onClick={() => { const t = from; setFrom(to); setTo(t); }}>
+            <Ico.swap />
+          </button>
+          <div className="convert-card">
+            <div className="convert-label">В</div>
+            <div className="convert-row">
+              <div className="convert-amount" style={{ color: 'var(--text-3)' }}>{(parseFloat(amount || 0) * 0.998).toFixed(2)}</div>
+              <span className="convert-cur-pill">{to}</span>
+            </div>
+            <div className="convert-rate">1 {from} = 0.998 {to}</div>
+          </div>
+        </div>
+
+        <div style={{ margin: '24px 22px', padding: 16, background: 'var(--surface)', borderRadius: 14, border: '0.5px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+            <span style={{ color: 'var(--text-3)' }}>Комиссия</span>
+            <span style={{ color: 'var(--text)' }}>0.2%</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+            <span style={{ color: 'var(--text-3)' }}>Курс зафиксирован на</span>
+            <span style={{ color: 'var(--text)' }}>30 секунд</span>
+          </div>
+        </div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-accent" onClick={() => nav('convertSuccess')}>Обменять</button>
+      </div>
+    </div>
+  );
+};
+
+const ConvertSuccessScreen = ({ nav }) => (
+  <div className="screen">
+    <TopBar leftBtn={<button className="back-btn" onClick={() => nav('home')}><Ico.close /></button>} />
+    <div className="success-screen">
+      <div className="success-icon"><Ico.check size={36} /></div>
+      <div className="success-title">Обмен<br/><em style={{ color: 'var(--accent)' }}>выполнен</em></div>
+      <div className="success-sub" style={{ marginTop: 12 }}>499.00 USDT зачислено на счёт</div>
+      <div style={{ marginTop: 36, width: '100%' }}>
+        <button className="btn-primary" onClick={() => nav('home')}>Готово</button>
+      </div>
+    </div>
+  </div>
+);
+
+const CardManageScreen = ({ nav }) => (
+  <div className="screen">
+    <TopBar title="Препейд карта" onBack={() => nav('home')} action={<button className="icon-btn"><Ico.settings /></button>} />
+    <div className="credit-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+        <div className="card-brand"><em>wallet</em></div>
+        <svg width="32" height="22" viewBox="0 0 32 22" fill="none">
+          <rect width="32" height="22" rx="3" fill="rgba(255,255,255,0.1)"/>
+          <rect x="4" y="4" width="24" height="14" rx="1.5" fill="url(#chip)"/>
+          <defs>
+            <linearGradient id="chip" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#FF9B82"/>
+              <stop offset="100%" stopColor="#c9402b"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div className="card-number">•••• •••• •••• 4821</div>
+      <div className="card-foot">
+        <div>
+          <div className="card-name">Alina V.</div>
+          <div className="card-name" style={{ marginTop: 4 }}>12 / 27</div>
+        </div>
+        <svg width="34" height="20" viewBox="0 0 34 20" fill="none">
+          <circle cx="11" cy="10" r="9" fill="#eb001b"/>
+          <circle cx="22" cy="10" r="9" fill="#f79e1b" opacity="0.95"/>
+        </svg>
+      </div>
+    </div>
+
+    <div style={{ padding: '0 22px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+      <button className="qa">
+        <div className="qa-icon"><Ico.upload /></div>
+        <span className="qa-label">Пополнить</span>
+      </button>
+      <button className="qa">
+        <div className="qa-icon"><Ico.lock /></div>
+        <span className="qa-label">Заморозить</span>
+      </button>
+      <button className="qa">
+        <div className="qa-icon"><Ico.settings /></div>
+        <span className="qa-label">Лимиты</span>
+      </button>
+    </div>
+
+    <div style={{ padding: '0 22px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 18, background: 'var(--surface)', borderRadius: 18, border: '0.5px solid var(--border)' }}>
+        <div>
+          <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 6 }}>Баланс карты</div>
+          <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 28, letterSpacing: '-0.02em' }}>$1 200.00</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 11, color: 'var(--text-3)' }}>Лимит</div>
+          <div style={{ fontSize: 13, color: 'var(--accent)', marginTop: 6, fontWeight: 500 }}>$2 500 / месяц</div>
+        </div>
+      </div>
+    </div>
+
+    <div className="section-head" style={{ paddingTop: 8 }}>
+      <span className="section-title">Последние покупки</span>
+    </div>
+    <div className="tx-list">
+      {[
+        { name: 'Zara online', date: 'Вчера · 19:15', amount: '−$64.90', initial: 'Z' },
+        { name: 'Spotify Premium', date: '27 апр', amount: '−$10.00', initial: 'S' },
+        { name: 'Adobe Creative', date: '25 апр', amount: '−$54.99', initial: 'A' },
+      ].map((p, i) => (
+        <div key={i} className="tx-item">
+          <div className="tx-icon">{p.initial}</div>
+          <div className="tx-info">
+            <div className="tx-name">{p.name}</div>
+            <div className="tx-date">{p.date}</div>
+          </div>
+          <div className="tx-amount out">{p.amount}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const HistoryScreen = ({ nav }) => (
+  <div className="screen">
+    <div className="topbar">
+      <div className="topbar-title">История</div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="icon-btn"><Ico.search /></button>
+        <button className="icon-btn"><Ico.filter /></button>
+      </div>
+    </div>
+    <div className="filter-tabs">
+      {['Все', 'Зачисления', 'Выводы', 'Обмены', 'Карта'].map((t, i) => (
+        <button key={i} className={`filter-tab ${i === 0 ? 'active' : ''}`}>{t}</button>
+      ))}
+    </div>
+    <div style={{ flex: 1 }}>
+      <div className="day-label">Сегодня</div>
+      <div className="tx-list" style={{ paddingBottom: 0 }}>
+        {TRANSACTIONS.slice(0, 1).map(tx => (
+          <div key={tx.id} className="tx-item" onClick={() => nav('txDetail', { tx })}>
+            <div className="tx-icon">{tx.initial}</div>
+            <div className="tx-info">
+              <div className="tx-name">{tx.name}</div>
+              <div className="tx-date">{tx.date}</div>
+            </div>
+            <div className="tx-amount in">{tx.amount}</div>
+          </div>
+        ))}
+      </div>
+      <div className="day-label">Вчера</div>
+      <div className="tx-list" style={{ paddingBottom: 0 }}>
+        {TRANSACTIONS.slice(1, 3).map(tx => (
+          <div key={tx.id} className="tx-item" onClick={() => nav('txDetail', { tx })}>
+            <div className="tx-icon">{tx.initial}</div>
+            <div className="tx-info">
+              <div className="tx-name">{tx.name}</div>
+              <div className="tx-date">{tx.date}</div>
+            </div>
+            <div className={`tx-amount ${tx.type === 'in' ? 'in' : 'out'}`}>{tx.amount}</div>
+          </div>
+        ))}
+      </div>
+      <div className="day-label">Эта неделя</div>
+      <div className="tx-list">
+        {TRANSACTIONS.slice(3).map(tx => (
+          <div key={tx.id} className="tx-item" onClick={() => nav('txDetail', { tx })}>
+            <div className="tx-icon">{tx.initial}</div>
+            <div className="tx-info">
+              <div className="tx-name">{tx.name}</div>
+              <div className="tx-date">{tx.date}</div>
+            </div>
+            <div className={`tx-amount ${tx.type === 'in' ? 'in' : tx.type === 'out' ? 'out' : ''}`} style={tx.type === 'swap' ? { color: 'var(--accent)' } : {}}>
+              {tx.amount}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const MarketScreen = ({ nav }) => {
+  const cats = ['Связь', 'Покупки', 'Путешествия'];
+  return (
+    <div className="screen">
+      <div className="topbar">
+        <div className="topbar-title">Сервисы</div>
+        <button className="icon-btn"><Ico.search /></button>
+      </div>
+      <div className="mkt-hero" onClick={() => nav('marketDetail', { srv: MARKET[0] })}>
+        <div className="mkt-hero-tag">Поездка скоро?</div>
+        <div className="mkt-hero-title">eSIM для 30 стран<br/><em>от $5</em></div>
+        <span className="mkt-hero-cta">Купить <Ico.arrow size={12} /></span>
+      </div>
+      {cats.map(cat => (
+        <div key={cat}>
+          <div className="mkt-cat">{cat}</div>
+          <div className="mkt-grid">
+            {MARKET.filter(s => s.cat === cat).map(s => {
+              const IconComp = Ico[s.icon];
+              return (
+                <div key={s.id} className="mkt-card" onClick={() => nav('marketDetail', { srv: s })}>
+                  <div className="mkt-icon"><IconComp /></div>
+                  <div>
+                    <div className="mkt-name">{s.name}</div>
+                    <div className="mkt-desc">{s.desc}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <div style={{ height: 80 }} />
+    </div>
+  );
+};
+
+const MarketDetailScreen = ({ nav, params }) => {
+  const srv = params?.srv || MARKET[0];
+  const IconComp = Ico[srv.icon];
+  const [selected, setSelected] = useState(1);
+  const plans = [
+    { id: 0, name: '1 GB', days: '7 дней', price: 4.50 },
+    { id: 1, name: '5 GB', days: '30 дней', price: 16.00 },
+    { id: 2, name: '10 GB', days: '30 дней', price: 26.00 },
+    { id: 3, name: 'Безлимит', days: '15 дней', price: 49.00 },
+  ];
+  return (
+    <div className="screen">
+      <TopBar onBack={() => nav('market')} title={srv.name} />
+      <div style={{ flex: 1 }}>
+        <div style={{ textAlign: 'center', padding: '12px 22px 28px' }}>
+          <div style={{ width: 76, height: 76, margin: '0 auto', borderRadius: '50%', background: 'var(--accent-soft)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconComp />
+          </div>
+          <h2 className="display-h1" style={{ fontSize: 32, marginTop: 18 }}>{srv.name} для<br/><em>Испании</em></h2>
+          <p style={{ fontSize: 14, color: 'var(--text-3)', marginTop: 8 }}>Активация мгновенно через QR-код</p>
+        </div>
+        <div className="list-section-label" style={{ paddingLeft: 22 }}>Тарифы</div>
+        <div className="method-list">
+          {plans.map(p => (
+            <div key={p.id} className={`method ${selected === p.id ? 'selected' : ''}`} onClick={() => setSelected(p.id)}>
+              <div className="method-info">
+                <div className="method-name">{p.name}</div>
+                <div className="method-meta">{p.days}</div>
+              </div>
+              <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 22, color: 'var(--text)', letterSpacing: '-0.02em' }}>${p.price}</div>
+              <div className="method-radio" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="bottom-actions">
+        <button className="btn-accent" onClick={() => nav('marketSuccess', { plan: plans[selected], srv })}>Купить за ${plans[selected].price}</button>
+      </div>
+    </div>
+  );
+};
+
+const MarketSuccessScreen = ({ nav, params }) => (
+  <div className="screen">
+    <TopBar leftBtn={<button className="back-btn" onClick={() => nav('home')}><Ico.close /></button>} />
+    <div className="success-screen">
+      <div className="success-icon"><Ico.check size={36} /></div>
+      <div className="success-title">{params?.srv?.name || 'eSIM'}<br/><em style={{ color: 'var(--accent)' }}>куплен</em></div>
+      <div className="success-sub" style={{ marginTop: 12 }}>Отсканируй QR-код в настройках телефона для активации</div>
+      <div style={{ width: 180, height: 180, background: '#fff', borderRadius: 20, margin: '28px 0', padding: 14 }}>
+        <svg viewBox="0 0 100 100" width="100%" height="100%">
+          {Array.from({length: 100}).map((_, i) => {
+            const x = (i % 10) * 10;
+            const y = Math.floor(i / 10) * 10;
+            const filled = (i * 7 + 3) % 5 < 2 || (i % 11 === 0);
+            return filled ? <rect key={i} x={x} y={y} width="9" height="9" fill="#000"/> : null;
+          })}
+          <rect x="0" y="0" width="30" height="30" fill="#fff"/>
+          <rect x="5" y="5" width="20" height="20" fill="#000"/>
+          <rect x="9" y="9" width="12" height="12" fill="#fff"/>
+          <rect x="12" y="12" width="6" height="6" fill="#000"/>
+          <rect x="70" y="0" width="30" height="30" fill="#fff"/>
+          <rect x="75" y="5" width="20" height="20" fill="#000"/>
+          <rect x="79" y="9" width="12" height="12" fill="#fff"/>
+          <rect x="82" y="12" width="6" height="6" fill="#000"/>
+          <rect x="0" y="70" width="30" height="30" fill="#fff"/>
+          <rect x="5" y="75" width="20" height="20" fill="#000"/>
+          <rect x="9" y="79" width="12" height="12" fill="#fff"/>
+          <rect x="12" y="82" width="6" height="6" fill="#000"/>
+        </svg>
+      </div>
+      <div style={{ width: '100%' }}>
+        <button className="btn-primary" onClick={() => nav('home')}>Готово</button>
+      </div>
+    </div>
+  </div>
+);
+
+const ProfileScreen = ({ nav, theme, onThemeToggle }) => (
+  <div className="screen">
+    <div className="topbar">
+      <div className="topbar-title">Профиль</div>
+      <ThemeSwitch theme={theme} onToggle={onThemeToggle} />
+    </div>
+    <div style={{ textAlign: 'center', padding: '12px 22px 28px' }}>
+      <div style={{ width: 88, height: 88, margin: '0 auto', borderRadius: '50%', background: 'var(--accent-soft)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Instrument Serif, serif', fontSize: 38, fontStyle: 'italic' }}>A</div>
+      <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 28, marginTop: 14, letterSpacing: '-0.02em' }}>Alina V.</div>
+      <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>alina@example.com</div>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, padding: '5px 14px', background: 'var(--surface)', color: 'var(--positive)', borderRadius: 999, fontSize: 12, fontWeight: 500, border: '0.5px solid var(--border)' }}>
+        <span className="status-dot" />
+        <span>Верифицирован</span>
+      </div>
+    </div>
+
+    <div className="list-section-label">Аккаунт</div>
+    <div className="list-section">
+      <div className="list-card">
+        <div className="list-row" onClick={() => nav('customize')}>
+          <div className="list-icon"><Ico.settings /></div>
+          <div className="list-content"><div className="list-title">Настройки экрана</div><div className="list-sub">Виджеты, счета, действия</div></div>
+          <Ico.arrow />
+        </div>
+        <div className="list-row" onClick={() => nav('security')}>
+          <div className="list-icon"><Ico.shield /></div>
+          <div className="list-content"><div className="list-title">Безопасность</div><div className="list-sub">PIN, биометрия, 2FA</div></div>
+          <Ico.arrow />
+        </div>
+        <div className="list-row">
+          <div className="list-icon"><Ico.bell /></div>
+          <div className="list-content"><div className="list-title">Уведомления</div><div className="list-sub">Push, email</div></div>
+          <Ico.arrow />
+        </div>
+      </div>
+    </div>
+
+    <div className="list-section-label">Финансы</div>
+    <div className="list-section">
+      <div className="list-card">
+        <div className="list-row">
+          <div className="list-icon"><Ico.wallet /></div>
+          <div className="list-content"><div className="list-title">Сохранённые получатели</div></div>
+          <Ico.arrow />
+        </div>
+        <div className="list-row">
+          <div className="list-icon"><Ico.download /></div>
+          <div className="list-content"><div className="list-title">Автовывод</div><div className="list-sub">По расписанию</div></div>
+          <Ico.arrow />
+        </div>
+      </div>
+    </div>
+
+    <div className="list-section-label">Прочее</div>
+    <div className="list-section">
+      <div className="list-card">
+        <div className="list-row">
+          <div className="list-icon"><Ico.search /></div>
+          <div className="list-content"><div className="list-title">Поддержка</div></div>
+          <Ico.arrow />
+        </div>
+        <div className="list-row" onClick={() => nav('welcome')}>
+          <div className="list-icon"><Ico.back /></div>
+          <div className="list-content"><div className="list-title" style={{ color: 'var(--accent)' }}>Выйти</div></div>
+        </div>
+      </div>
+    </div>
+    <div style={{ height: 100 }} />
+  </div>
+);
+
+const CustomizeScreen = ({ nav }) => {
+  const [accs, setAccs] = useState({ usd: true, eur: true, usdt: true, cop: false });
+  const [actions, setActions] = useState({ payout: true, qr: true, convert: true, card: false });
+  const [widgets, setWidgets] = useState({ chart: true, rates: false, card: false });
+  const [saved, setSaved] = useState(false);
+
+  const Toggle = ({ value, onChange }) => (
+    <div className={`toggle ${value ? 'on' : 'off'}`} onClick={onChange}><div className="toggle-thumb" /></div>
+  );
+
+  return (
+    <div className="screen">
+      <TopBar
+        title="Мой экран"
+        onBack={() => nav('profile')}
+        action={
+          <button onClick={() => { setSaved(true); setTimeout(() => nav('home'), 600); }} style={{ fontSize: 14, color: saved ? 'var(--positive)' : 'var(--accent)', fontWeight: 500, padding: '8px 14px' }}>
+            {saved ? '✓ Готово' : 'Готово'}
+          </button>
+        }
+      />
+      <div style={{ flex: 1 }}>
+        <div className="list-section-label">Счета</div>
+        <div className="list-section">
+          <div className="list-card">
+            {Object.entries({ usd: ['USD счёт', '$4 820.50'], eur: ['EUR счёт', '€2 150.00'], usdt: ['USDT', '1 200 USDT'], cop: ['COP счёт', '$1.24M COP'] }).map(([k, [name, val]]) => (
+              <div key={k} className="cust-row">
+                <div className="drag-grip"><div className="drag-line"/><div className="drag-line"/><div className="drag-line"/></div>
+                <div className="list-content"><div className="list-title">{name}</div><div className="list-sub">{val}</div></div>
+                <Toggle value={accs[k]} onChange={() => setAccs({...accs, [k]: !accs[k]})} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="list-section-label">Быстрые действия</div>
+        <div className="list-section">
+          <div className="list-card">
+            {Object.entries({ payout: 'Вывести', qr: 'QR-оплата', convert: 'Обмен', card: 'Карта' }).map(([k, name]) => (
+              <div key={k} className="cust-row">
+                <div className="drag-grip"><div className="drag-line"/><div className="drag-line"/><div className="drag-line"/></div>
+                <div className="list-title">{name}</div>
+                <div style={{ flex: 1 }} />
+                <Toggle value={actions[k]} onChange={() => setActions({...actions, [k]: !actions[k]})} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="list-section-label">Виджеты</div>
+        <div className="list-section">
+          <div className="list-card">
+            {Object.entries({ chart: 'График доходов', rates: 'Курсы валют', card: 'Карта' }).map(([k, name]) => (
+              <div key={k} className="cust-row">
+                <div className="drag-grip"><div className="drag-line"/><div className="drag-line"/><div className="drag-line"/></div>
+                <div className="list-title">{name}</div>
+                <div style={{ flex: 1 }} />
+                <Toggle value={widgets[k]} onChange={() => setWidgets({...widgets, [k]: !widgets[k]})} />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ height: 30 }} />
+      </div>
+    </div>
+  );
+};
+
+const SecurityScreen = ({ nav }) => (
+  <div className="screen">
+    <TopBar title="Безопасность" onBack={() => nav('profile')} />
+    <div style={{ flex: 1 }}>
+      <div className="list-section-label">Защита</div>
+      <div className="list-section">
+        <div className="list-card">
+          <div className="list-row">
+            <div className="list-icon"><Ico.lock /></div>
+            <div className="list-content"><div className="list-title">Изменить PIN</div></div>
+            <Ico.arrow />
+          </div>
+          <div className="list-row">
+            <div className="list-icon"><Ico.shield /></div>
+            <div className="list-content"><div className="list-title">Touch ID / Face ID</div></div>
+            <div className="toggle on"><div className="toggle-thumb" /></div>
+          </div>
+          <div className="list-row">
+            <div className="list-icon"><Ico.shield /></div>
+            <div className="list-content"><div className="list-title">2FA</div><div className="list-sub">SMS, Authenticator</div></div>
+            <div className="toggle on"><div className="toggle-thumb" /></div>
+          </div>
+        </div>
+      </div>
+      <div className="list-section-label">Сессии</div>
+      <div className="list-section">
+        <div className="list-card">
+          <div className="list-row">
+            <div className="list-icon"><Ico.user /></div>
+            <div className="list-content"><div className="list-title">iPhone 15 · Cali</div><div className="list-sub">Текущая · сейчас</div></div>
+          </div>
+          <div className="list-row">
+            <div className="list-icon"><Ico.user /></div>
+            <div className="list-content"><div className="list-title">MacBook · Cali</div><div className="list-sub">2 дня назад</div></div>
+            <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 500 }}>Завершить</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ============= APP =============
+function App() {
+  const [route, setRoute] = useState('welcome');
+  const [params, setParams] = useState(null);
+  const [mainTab, setMainTab] = useState('home');
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-meta')?.setAttribute('content', theme === 'dark' ? '#0d0d10' : '#f5f1ea');
+  }, [theme]);
+
+  const onThemeToggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+
+  const nav = (r, p = null) => {
+    if (['home', 'history', 'market', 'profile'].includes(r)) {
+      setMainTab(r);
+    }
+    setRoute(r);
+    setParams(p);
+  };
+
+  const themeProps = { theme, onThemeToggle };
+
+  const screens = {
+    welcome: <WelcomeScreen nav={nav} {...themeProps} />,
+    register: <RegisterScreen nav={nav} />,
+    kyc: <KycScreen nav={nav} />,
+    openAccount: <OpenAccountScreen nav={nav} />,
+    login: <LoginScreen nav={nav} />,
+    home: <HomeScreen nav={nav} setMainTab={setMainTab} />,
+    notifications: <NotificationsScreen nav={nav} />,
+    txDetail: <TxDetailScreen nav={nav} params={params} />,
+    payout: <PayoutScreen nav={nav} />,
+    payoutSuccess: <PayoutSuccessScreen nav={nav} params={params} />,
+    qr: <QrScreen nav={nav} />,
+    qrConfirm: <QrConfirmScreen nav={nav} />,
+    qrSuccess: <QrSuccessScreen nav={nav} />,
+    convert: <ConvertScreen nav={nav} />,
+    convertSuccess: <ConvertSuccessScreen nav={nav} />,
+    cardManage: <CardManageScreen nav={nav} />,
+    history: <HistoryScreen nav={nav} />,
+    market: <MarketScreen nav={nav} />,
+    marketDetail: <MarketDetailScreen nav={nav} params={params} />,
+    marketSuccess: <MarketSuccessScreen nav={nav} params={params} />,
+    profile: <ProfileScreen nav={nav} {...themeProps} />,
+    customize: <CustomizeScreen nav={nav} />,
+    security: <SecurityScreen nav={nav} />,
+  };
+
+  const showBottomNav = ['home', 'history', 'market', 'profile'].includes(route);
+
+  return (
+    <div className="phone">
+      {screens[route]}
+      {showBottomNav && <BottomNav active={mainTab} nav={(r) => { setMainTab(r); setRoute(r); }} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
